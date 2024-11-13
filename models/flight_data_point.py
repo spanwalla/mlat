@@ -30,5 +30,12 @@ class FlightDataPoint(BaseModel):
         return (f'{self.timestamp.magnitude},"{self.position.latitude},{self.position.longitude}",'
                 f'{int(self.altitude.magnitude) if isinstance(self.altitude, ureg.Quantity) else self.altitude}')
 
+    def to_dict(self) -> dict[str, any]:
+        return {
+            'timestamp': self.timestamp.magnitude,
+            'position': f'{self.position.latitude},{self.position.longitude}',
+            'altitude': int(self.altitude.magnitude)
+        }
+
     class Config:
         arbitrary_types_allowed = True
