@@ -4,7 +4,7 @@ from config import ureg
 
 class ToaDataPoint(BaseModel):
     timestamp: ureg.Quantity | int
-    signal_time: list[ureg.Quantity]
+    signal_time: dict[int, ureg.Quantity]
 
     @field_validator('timestamp')
     def convert_to_second(cls, value: any):  # noqa
@@ -13,7 +13,13 @@ class ToaDataPoint(BaseModel):
         return value * ureg.second
 
     def __str__(self):
-        return f"{self.timestamp.to('second').magnitude},[{','.join([str(s.to('second').magnitude) for s in self.signal_time])}]"
+        return (f"{self.timestamp.to('second').magnitude},"
+                f"[{','.join([f'{k}:{v.to('second').magnitude}' for k, v in self.signal_time.items()])}]")
+
+    def to_dict(self) -> dict[str, any]:
+        d: dict[str | int, any] = {'timestamp': self.timestamp.to('second').magnitude}
+        d.update({k: v.to('second').magnitude for k, v in self.signal_time.items()})
+        return d
 
     class Config:
         arbitrary_types_allowed = True

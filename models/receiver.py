@@ -29,5 +29,11 @@ class Receiver(BaseModel):
     def __str__(self):
         return f'"{self.position.latitude},{self.position.longitude}",{self.altitude.magnitude}'
 
+    def to_dict(self) -> dict[str, any]:
+        return {
+            'position': f'{self.position.latitude},{self.position.longitude}',
+            'altitude': self.altitude.magnitude
+        }
+
     class Config:
         arbitrary_types_allowed = True

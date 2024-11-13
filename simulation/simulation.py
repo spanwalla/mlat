@@ -22,7 +22,7 @@ class Simulation:
         self.simulation_parameters = simulation_parameters
         self.trajectory: list[FlightDataPoint] = []
         self.receivers: dict[int, Receiver] = {}
-        self.time_of_arrival: tuple[list[int], list[ToaDataPoint]] = ([], [])
+        self.time_of_arrival: list[ToaDataPoint] = []
 
     def simulate(self) -> list[FlightDataPoint]:
         total_distance: ureg.Quantity = geodesic(self.flight.start_point, self.flight.end_point).km * ureg.km
@@ -131,13 +131,12 @@ class Simulation:
     # Рассчитывает TOA до каждого приёмника для всех точек в траектории
     def _calculate_toa(self) -> None:
         toa_list: list[ToaDataPoint] = []
-        receiver_order: list[int] = list(self.receivers.keys())
 
         for point in self.trajectory:
-            toa_point: list[ureg.Quantity] = []
-            for recv_num in receiver_order:
-                toa_point.append(self.receivers[recv_num].get_time_of_arrival(point.position, point.altitude))
+            toa_point: dict[int, ureg.Quantity] = {}
+            for key, receiver in self.receivers.items():
+                toa_point[key] = receiver.get_time_of_arrival(point.position, point.altitude)
 
             toa_list.append(ToaDataPoint(timestamp=point.timestamp, signal_time=toa_point))
 
-        self.time_of_arrival = (receiver_order, toa_list)
+        self.time_of_arrival = toa_list
