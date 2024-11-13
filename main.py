@@ -1,4 +1,7 @@
+import geopy
+
 import models
+from config import ureg
 from simulation import Simulation
 
 
@@ -7,4 +10,7 @@ if __name__ == '__main__':
     sim_params = models.SimulationParameters()
     sim = Simulation(f, sim_params)
 
-    print(*sim.simulate(), sep='\n')
+    sim.simulate()
+    print(*sim.time_of_arrival[1], sep='\n')
+    # print(*sim.simulate(), sep='\n')
+    # print(sim.receivers)

@@ -1,8 +1,8 @@
 import numpy as np
-from geopy.distance import geodesic, distance
+from geopy.distance import geodesic
 from geopy import Point
-from config import ureg
-from models import FlightDataPoint, Flight, SimulationParameters
+from config import ureg, MIN_RECEIVERS, DEFAULT_RECEIVERS, RECEIVER_MAX_OFFSET
+from models import FlightDataPoint, Flight, SimulationParameters, Receiver, ToaDataPoint
 
 
 def calculate_azimuth(first: Point, second: Point) -> float:
@@ -20,6 +20,9 @@ class Simulation:
     def __init__(self, flight: Flight, simulation_parameters: SimulationParameters):
         self.flight = flight
         self.simulation_parameters = simulation_parameters
+        self.trajectory: list[FlightDataPoint] = []
+        self.receivers: dict[int, Receiver] = {}
+        self.time_of_arrival: tuple[list[int], list[ToaDataPoint]] = ([], [])
 
     def simulate(self) -> list[FlightDataPoint]:
         total_distance: ureg.Quantity = geodesic(self.flight.start_point, self.flight.end_point).km * ureg.km
@@ -27,8 +30,6 @@ class Simulation:
         # Время набора и снижения высоты
         climb_time: ureg.Quantity = self.flight.cruise_altitude / self.flight.climb_rate
         descent_time: ureg.Quantity = self.flight.cruise_altitude / self.flight.descent_rate
-
-        trajectory: list[FlightDataPoint] = []
 
         climb, climb_dist = self._calculate_trajectory_segment(climb_time, self.flight.start_point,
                                                                self.flight.end_point,
@@ -52,7 +53,10 @@ class Simulation:
                                                                  self.simulation_parameters.sampling_intervals[
                                                                      'cruise'])
 
-        return self._reorder_timestamps(climb, cruise, descent)
+        self.trajectory = self._reorder_timestamps(climb, cruise, descent)
+        self._place_receivers()
+        self._calculate_toa()
+        return self.trajectory
 
     def _reorder_timestamps(self, climb: list[FlightDataPoint], cruise: list[FlightDataPoint],
                             descent: list[FlightDataPoint]) -> list[FlightDataPoint]:
@@ -105,3 +109,35 @@ class Simulation:
             current_time += sampling_interval
 
         return trajectory, total_distance
+
+    # Подобрать места и расположить несколько станций (как минимум 4) по пути следования самолёта
+    def _place_receivers(self, count: int = DEFAULT_RECEIVERS) -> None:
+        if count < MIN_RECEIVERS:
+            raise ValueError(f'count = {count} must be greater or equal than {MIN_RECEIVERS}.')
+
+        self.receivers.clear()
+
+        # Определим индексы точек, возле которых будем ставить приёмники, возьмём равномерно
+        indices: np.ndarray[int] = (np.linspace(0, len(self.trajectory) - 1, count)).astype(int)
+        for i in indices:
+            # Сместим приёмник в случайном направлении на 0-250 км от точки
+            offset: ureg.Quantity = RECEIVER_MAX_OFFSET.to('km') * np.random.random_sample()
+            bearing: int = np.random.randint(0, 360)
+
+            self.receivers[int(i)] = Receiver(
+                position=geodesic(kilometers=offset.to('km').magnitude).destination(self.trajectory[i].position,
+                                                                                    bearing=bearing))
+
+    # Рассчитывает TOA до каждого приёмника для всех точек в траектории
+    def _calculate_toa(self) -> None:
+        toa_list: list[ToaDataPoint] = []
+        receiver_order: list[int] = list(self.receivers.keys())
+
+        for point in self.trajectory:
+            toa_point: list[ureg.Quantity] = []
+            for recv_num in receiver_order:
+                toa_point.append(self.receivers[recv_num].get_time_of_arrival(point.position, point.altitude))
+
+            toa_list.append(ToaDataPoint(timestamp=point.timestamp, signal_time=toa_point))
+
+        self.time_of_arrival = (receiver_order, toa_list)
