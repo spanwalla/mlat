@@ -2,7 +2,7 @@ from .common import from_dict_to_csv
 from simulation import Simulation
 
 
-def simulation_to_csv(simulation: Simulation):
+def to_csv(simulation: Simulation):
     """ Выполняем некоторые преобразования, чтобы записать данные в файл .csv """
     __extra_dir__: str = 'simulation'
 

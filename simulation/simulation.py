@@ -73,6 +73,7 @@ class Simulation:
         current_timestamp = trajectory[-1].timestamp + self.simulation_parameters.sampling_intervals['descent']
         for point in descent:
             point.timestamp += current_timestamp
+            point.heading = (point.heading + 180) % 360
             trajectory.append(point)
 
         return trajectory
@@ -103,14 +104,15 @@ class Simulation:
             trajectory.append(FlightDataPoint(
                 timestamp=current_time,
                 position=current_position,
-                altitude=current_altitude
+                altitude=current_altitude,
+                heading=azimuth
             ))
 
             current_time += sampling_interval
 
         return trajectory, total_distance
 
-    # Подобрать места и расположить несколько станций (как минимум 4) по пути следования самолёта
+    # Подбирает места и располагает несколько станций (как минимум 4) по пути следования самолёта
     def _place_receivers(self, count: int = DEFAULT_RECEIVERS) -> None:
         if count < MIN_RECEIVERS:
             raise ValueError(f'count = {count} must be greater or equal than {MIN_RECEIVERS}.')
