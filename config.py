@@ -8,6 +8,8 @@ ureg.auto_reduce_dimensions = True  # Автоматически упрощат�
 MIN_RECEIVERS: int = 4
 DEFAULT_RECEIVERS: int = 4
 RECEIVER_MAX_OFFSET: ureg.Quantity = ureg.Quantity(250, 'km')
+EQUATIONS_COUNT: int = int((DEFAULT_RECEIVERS * (DEFAULT_RECEIVERS - 1)) / 2)
+MAX_ITERATIONS_COUNT: int = 1
 
 # Пути к директориям по умолчанию (относительно корня)
 DEFAULT_EXPORT_DIRECTORY = 'data/output'
