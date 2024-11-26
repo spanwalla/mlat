@@ -9,6 +9,7 @@ if __name__ == '__main__':
     sim = Simulation(f, sim_params)
 
     sim.simulate()
-    export.simulation.to_csv(sim)
+    # export.simulation.to_csv(sim)
     export.simulation.toa_to_csv(noise.toa.standard_noise(sim.time_of_arrival, 0.05), 'toa_noise.csv')
+    export.simulation.to_csv(sim)
     # export.kml.flight_data_point(sim.trajectory, metadata=f)
