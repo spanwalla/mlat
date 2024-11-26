@@ -1,4 +1,4 @@
-from xml.etree.ElementTree import Element, SubElement, tostring, ElementTree
+from xml.etree.ElementTree import Element, tostring
 from xml.dom import minidom
 import geopy
 from config import ureg
