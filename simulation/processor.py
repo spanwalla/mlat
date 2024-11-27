@@ -1,16 +1,13 @@
-import sys
-sys.path.append('math_')
-import equation_solver as es
+from filters import equation_solver as es
 import numpy as np
-import utm
 
 
-class Processor():
+class Processor:
     def __init__(self):
         self._solver = es.EquationSolver()
-        self._receivers_toa: dict[np.uint16, float] = {}
+        self._receivers_toa: dict[int, float] = {}
     
-    def init_solver(self, receivers_coords: dict[np.uint16, np.ndarray], init: np.ndarray = np.zeros(3)):
+    def init_solver(self, receivers_coords: dict[int, np.ndarray], init: np.ndarray = np.zeros(3)):
         self._solver._init_coords = init
         tdoas = np.zeros(es.EQUATIONS_COUNT)
         self.calculate_tdoa(tdoas)
@@ -18,11 +15,11 @@ class Processor():
         self._solver._init_tdoas = tdoas
         self._solver._receivers_coords = receivers_coords
         
-    def add_toa(self, id: np.uint16, toa: float) -> None:
-        self._receivers_toa[id] = toa
+    def add_toa(self, rec_id: int, toa: float) -> None:
+        self._receivers_toa[rec_id] = toa
         
     def calculate_tdoa(self, tdoas: np.ndarray) -> None:
-        k: np.uint16 = 0
+        k = 0
         for i in range(es.DEFAULT_RECEIVERS):
             for j in range(i + 1, es.DEFAULT_RECEIVERS):
                 tdoas[k] = self._receivers_toa[i] - self._receivers_toa[j]
