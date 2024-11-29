@@ -1,8 +1,6 @@
 from filters import equation_solver as es
 import numpy as np
 from filters import mlat_estimation as me
-import config
-# import utm
 
 
 class NoiseGenerator:

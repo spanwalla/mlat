@@ -120,15 +120,17 @@ class Simulation:
         self.receivers.clear()
 
         # Определим индексы точек, возле которых будем ставить приёмники, возьмём равномерно
-        indices: np.ndarray[int] = (np.linspace(0, len(self.trajectory) - 1, count)).astype(int)
+        indices: np.ndarray = np.linspace(0, len(self.trajectory) - 1, count)
         for i in indices:
             # Сместим приёмник в случайном направлении на 0-250 км от точки
             offset: ureg.Quantity = RECEIVER_MAX_OFFSET.to('km') * np.random.random_sample()
             bearing: int = np.random.randint(0, 360)
 
             self.receivers[int(i)] = Receiver(
-                position=geodesic(kilometers=offset.to('km').magnitude).destination(self.trajectory[i].position,
-                                                                                    bearing=bearing))
+                position=geodesic(kilometers=offset.to('km').magnitude)
+                                .destination(self.trajectory[i].position, bearing=bearing),
+                altitude=np.random.randint(0, 1500)
+            )
 
     # Рассчитывает TOA до каждого приёмника для всех точек в траектории
     def _calculate_toa(self) -> None:
