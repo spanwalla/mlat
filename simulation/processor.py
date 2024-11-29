@@ -14,7 +14,7 @@ class NoiseGenerator:
         return np.random.normal(self.mean, self.stddev)
 
 
-class Processor():
+class Processor:
     def __init__(self):
         self._solver = es.EquationSolver()
         self._receivers_toa: dict[np.uint16, float] = {}

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, field_validator
+from numpy import format_float_positional
 from config import ureg
 
 
@@ -14,11 +15,12 @@ class ToaDataPoint(BaseModel):
 
     def __str__(self):
         return (f"{self.timestamp.to('second').magnitude},"
-                f"[{','.join([f'{k}:{v.to('second').magnitude}' for k, v in self.signal_time.items()])}]")
+                f"[{','.join([f'{k}:{format_float_positional(v.to('second').magnitude)}' for k, v in
+                              self.signal_time.items()])}]")
 
     def to_dict(self) -> dict[str, any]:
         d: dict[str | int, any] = {'timestamp': self.timestamp.to('second').magnitude}
-        d.update({k: v.to('second').magnitude for k, v in self.signal_time.items()})
+        d.update({k: format_float_positional(v.to('second').magnitude) for k, v in self.signal_time.items()})
         return d
 
     class Config:
