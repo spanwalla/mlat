@@ -1,5 +1,5 @@
 import numpy as np
-from config import ureg, EQUATIONS_COUNT, DEFAULT_RECEIVERS, MAX_ITERATIONS_COUNT
+from config import ureg, EQUATIONS_COUNT, DEFAULT_RECEIVERS, MAX_ITERATIONS_COUNT, geo_to_proj
 
 
 def get_qr_decomposition(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -88,7 +88,7 @@ class EquationSolver:
                 for j in range(i + 1, DEFAULT_RECEIVERS):
                     if self._init_tdoas[k] < 0:
                         jacobian[k] = -jacobian[k]
-                        self._init_tdoas[k] = -self._init_tdoas[k] if self._init_tdoas[k] < 0 else self._init_tdoas[k]
+                        self._init_tdoas[k] = abs(self._init_tdoas[k])
                     discrepancy[k] = get_distance_ij(self._init_coords, i, j) - self._init_tdoas[k] * speed_of_light.to(
                         'km/s').magnitude
                     k += 1

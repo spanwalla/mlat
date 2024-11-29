@@ -1,12 +1,11 @@
 from . import kalman_filter as kf
 import numpy as np
-#import sys
-#sys.path.append('../')
 from config import k_dim_state, k_space_dim
 
 k_covariance_dispersion = [1e4, 9000, 10, 1e4, 9000, 10, 1e4, 1e3, 10]
 
-class MlatEstimation():
+
+class MlatEstimation:
     def __init__(self):
         self._filter = kf.KalmanFilter()
         self._filter._state_covariance_matrix = self.get_covariance_matrix()
@@ -22,7 +21,7 @@ class MlatEstimation():
         observation_matrix[1][3] = 1
         observation_matrix[2][6] = 1
         self._filter._observation_matrix = observation_matrix
-        self._time_delta: float
+        self._time_delta: float | None = None
     
     def update_state_matrix(self, time_delta: float) -> None:
         state_matrix = np.identity(k_dim_state)
@@ -31,7 +30,7 @@ class MlatEstimation():
             state_matrix[i][i+2] = time_delta * time_delta * 0.5
             state_matrix[i+1][i+2] = time_delta
         self._time_delta = time_delta
-        self._filter._state_transition_matrix = state_matrix #setStateMatrix
+        self._filter._state_transition_matrix = state_matrix  # setStateMatrix
     
     def init_state(self, initial_state: np.ndarray) -> None:
         self._filter._system_vector = initial_state

@@ -17,7 +17,7 @@ class NoiseGenerator:
 class Processor:
     def __init__(self):
         self._solver = es.EquationSolver()
-        self._receivers_toa: dict[np.uint16, float] = {}
+        self._receivers_toa: dict[int, float] = {}
         self._noise = NoiseGenerator()
         self._estim = me.MlatEstimation()
         self._mlat_average: np.ndarray
@@ -27,19 +27,18 @@ class Processor:
         self._iteration: np.int32
         self._overstatement: np.int32
     
-    def init_solver(self, receivers_coords: dict[np.uint16, np.ndarray], init: np.ndarray = np.zeros(3)):
-        self._solver._init_coords = init 
+    def init_solver(self, receivers_coords: dict[int, np.ndarray], init: np.ndarray = np.zeros(3)):
+        self._solver._init_coords = init
         tdoas = np.zeros(es.EQUATIONS_COUNT)
         self.calculate_tdoa(tdoas)
-        print(tdoas)
         self._solver._init_tdoas = tdoas
         self._solver._receivers_coords = receivers_coords
         
-    def add_toa(self, id: np.uint16, toa: float) -> None:
-        self._receivers_toa[id] = toa
+    def add_toa(self, rec_id: int, toa: float) -> None:
+        self._receivers_toa[rec_id] = toa
         
     def calculate_tdoa(self, tdoas: np.ndarray) -> None:
-        k: np.uint16 = 0
+        k: int = 0
         for i in range(es.DEFAULT_RECEIVERS):
             for j in range(i + 1, es.DEFAULT_RECEIVERS):
                 tdoas[k] = abs(self._receivers_toa[i] - self._receivers_toa[j])
