@@ -1,5 +1,5 @@
 import numpy as np
-from config import ureg, EQUATIONS_COUNT, DEFAULT_RECEIVERS, MAX_ITERATIONS_COUNT, geo_to_proj
+from config import ureg, EQUATIONS_COUNT, DEFAULT_RECEIVERS, MAX_ITERATIONS_COUNT
 
 
 def get_qr_decomposition(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -50,10 +50,10 @@ class EquationSolver:
         jacobian_row = [0, 0, 0]
 
         def numerator(receiver_coords, plane_coords):
-            return float(plane_coords - receiver_coords)
+            return plane_coords - receiver_coords
 
         def denumerator(index, coords):
-            return float(np.linalg.norm(self._receivers_coords[index] - coords))
+            return np.linalg.norm(self._receivers_coords[index] - coords)
 
         denumerator_i: float = denumerator(receiver_i, position)
         denumerator_j: float = denumerator(receiver_j, position)
@@ -78,24 +78,29 @@ class EquationSolver:
         discrepancy = np.zeros(EQUATIONS_COUNT)
 
         def get_distance_ij(at, rec_i, rec_j):
+            #print("dist i_j", self._receivers_coords[rec_i], rec_i, self._receivers_coords[rec_j], rec_j, at)
             return np.abs(np.linalg.norm(self._receivers_coords[rec_i] - at) -
                           np.linalg.norm(self._receivers_coords[rec_j] - at))
+            #return (np.linalg.norm(self._receivers_coords[rec_i] - self._receivers_coords[rec_j]))
 
         for iteration in range(MAX_ITERATIONS_COUNT):
             jacobian = self.get_jacobian(self._init_coords)
+            #print(jacobian)
             k = 0
             for i in range(DEFAULT_RECEIVERS):
                 for j in range(i + 1, DEFAULT_RECEIVERS):
                     if self._init_tdoas[k] < 0:
                         jacobian[k] = -jacobian[k]
-                        self._init_tdoas[k] = abs(self._init_tdoas[k])
-                    discrepancy[k] = get_distance_ij(self._init_coords, i, j) - self._init_tdoas[k] * speed_of_light.to(
-                        'km/s').magnitude
+                        self._init_tdoas[k] = -self._init_tdoas[k] 
+                    dist_ij = get_distance_ij(self._init_coords, i, j)
+                    ij_dist = self._init_tdoas[k] * speed_of_light.to('m/s').magnitude
+                    #print("ls", speed_of_light.to('km/s').magnitude)
+                    discrepancy[k] = dist_ij - ij_dist
                     k += 1
 
-            # print(jacobian)
-            # self._init_coords = self._init_coords + get_pseudo_inverse(jacobian) @ discrepancy
-            self._init_coords = self._init_coords + np.linalg.pinv(jacobian) @ discrepancy
+            self._init_coords = self._init_coords + get_pseudo_inverse(jacobian) @ discrepancy
+            #self._init_coords = self._init_coords + np.linalg.pinv(jacobian) @ discrepancy
 
         self._init_tdoas = tdoas
         return self._init_coords
+           

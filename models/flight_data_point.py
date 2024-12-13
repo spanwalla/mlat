@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from config import ureg
 from geopy import Point
+from pyproj import Transformer
 
 
 class FlightDataPoint(BaseModel):
@@ -33,10 +34,12 @@ class FlightDataPoint(BaseModel):
                 f'{int(self.heading)}')
 
     def to_dict(self) -> dict[str, any]:
+        transformer = Transformer.from_crs("epsg:4326", "epsg:3857")
+        pos = transformer.transform(self.position.latitude, self.position.longitude)
         return {
             'timestamp': self.timestamp.magnitude,
-            'position': f'{self.position.latitude},{self.position.longitude}',
-            'altitude': int(self.altitude.magnitude),
+            'position': f'{pos[0]},{pos[1]}',
+            'altitude': self.altitude.to('m').magnitude,
             'heading': int(self.heading)
         }
 
